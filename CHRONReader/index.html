@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8"/>
+    <script src="jquery.js"></script>
+    <script src="jquery-ui.min.js"></script>
+    <script src="jQDateRangeSlider-min.js"></script>
+
+    <link rel="stylesheet" id="themeCSS" href="classic.css">
+
+    <title>CHRONReader</title>
+</head>
+
+<body>
+    <img src="https://www.kb.nl/sites/default/files/olifanten.png" width="300" style="float: right; margin-right: 20%" alt="img">
+    <h2>CHRONReader: Query Classified Historical Newspaper Images</h2>
+    <br>
+    Select date-range:<br><br><br>
+    <div id="slider" style="margin-left: 100px; width: 400px;"></div>
+    <script>
+      $("#slider").dateRangeSlider(
+	{
+	 bounds: {min: new Date(1860, 0, 1), max: new Date(1919, 12, 31)},
+	 defaultValues: {min: new Date(1860, 0, 1), max: new Date(1936, 12, 31)},
+	});
+    </script>
+
+    <br>
+    Select image type:<br>
+    <input type="radio" id="photo" value="photo" name="image_type" style="margin-left: 100px" checked/>
+    <label for="photo">Photo</label>
+    <input type="radio" id="drawing" value="drawing" name="image_type"/>
+    <label for="drawing">Drawing</label>
+    <input type="radio" id="both" value="both" name="image_type"/>
+    <label for="both">Photo or drawing</label>
+    <br>
+    Select image category:<br>
+    <select style="margin-left: 100px; width: 200px;" id="drop1">
+      <option value="*">Any</option>
+      <option value="building" selected="selected">Building</option>
+      <option value="crowds">Crowds</option>
+      <option value="face">Face</option>
+      <option value="unknown">Other</option>
+    </select>
+
+    <select style="margin-left: 100px; width: 200px;" id="drop2">
+      <option value="*">Any</option>
+      <option value="building" selected="selected">Building</option>
+      <option value="cartoon">Cartoon</option>
+      <option value="chess">Chess</option>
+      <option value="crowds">Crowds</option>
+      <option value="face">Face</option>
+      <option value="logo">Logo</option>
+      <option value="schematics">Schematics</option>
+      <option value="sheetmusic">Sheetmusic</option>
+      <option value="weather">Weather</option>
+      <option value="unknown">Other</option>
+    </select>
+
+    <br>
+
+    <div id="face_sel">
+    Image with face:<br>
+    <input type="radio" id="face_off" value="no" name="face" style="margin-left: 100px"/>
+    <label for="face_off">No</label>
+    <input type="radio" id="face_on" value="yes" name="face"/>
+    <label for="face_on">Yes</label>
+    <input type="radio" id="face_maybe" value="no" name="face" checked/>
+    <label for="face_maybe">Yes or no</label>
+    </div>
+
+    Text in article:<br>
+    <input type="text" value="" name="text" style="margin-left: 100px" id="text"/>
+
+    <br>
+    <br>
+
+    <input type="text" value="" name="query" id="query" readonly style="width:800px;color: gray">
+    <br>
+    <br>
+    <br>
+
+
+    <script>
+    var query = "http://www.kbresearch.nl/xportal?";
+    var year="1900";
+    var first_part='image_type="photo"';
+    var last_part=' and image_type="building"';
+    var text="";
+    var date_range1="1860-01-01T00:00:00Z";
+    var date_range2="1937-31-01T00:00:00Z";
+    var face_off=' not image_type="face"';
+    var face_on=' and image_type="face"';
+    var face="";
+
+
+    $("#drawing").change(function () {
+      first_part='image_type="drawing"';
+      $("#drop2").show();
+      $("#drop1").hide();
+
+      $("#drop1").val("building");
+      $("#drop1").change();
+
+      $("#drop2").val("building");
+      $("#drop2").change();
+    });
+
+    $("#photo").change(function () {
+      first_part='image_type="photo"';
+      $("#drop1").show();
+      $("#drop2").hide();
+
+      $("#drop1").val("building");
+      $("#drop1").change();
+
+      $("#drop2").val("building");
+      $("#drop2").change();
+    });
+
+    $("#both").change(function () {
+      first_part='';
+      $("#drop1").hide();
+      $("#drop2").show();
+
+      $("#drop1").val("building");
+      $("#drop1").change();
+
+      $("#drop2").val("building");
+      $("#drop2").change();
+    });
+
+    $("#drop2").change(function () {
+        var end = this.value;
+        if (end == "chess" || end == "schematics" || end == "weather" || end == "sheetmusic" || end == "logo" || end == "cyrillic" || end == "weather" || end == "face" || end == "*") {
+        $("#face_sel").hide();
+    } else {
+        $("#face_sel").show();
+    }
+
+
+    if (first_part.length == 0) {
+        last_part = 'image_type="';
+    } else {
+        last_part = ' and image_type="';
+    }
+
+    last_part = last_part.concat(end);
+    last_part = last_part.concat('"');
+    change_query();
+    });
+
+    $("#drop1").change(function () {
+        var end = this.value;
+        if (end == "face" || end == "*") {
+            $("#face_sel").hide();
+            change_query();
+        } else {
+            $("#face_sel").show();
+            change_query();
+        }
+
+        last_part = ' and image_type="';
+        last_part = last_part.concat(end);
+        last_part = last_part.concat('"');
+        change_query();
+    });
+
+    $("#face_maybe").change(function () {
+        face = '';
+        change_query();
+    });
+
+    $("#face_off").change(function () {
+        face = face_off;
+        change_query();
+    });
+
+    $("#face_on").change(function () {
+        face = face_on;
+        change_query();
+    });
+
+    $("#drop2").hide();
+    $("#query").prop('disabled',true);
+
+    $("#text").on("change keyup paste click", function(){
+        text = this.value;
+        change_query();
+    })
+
+    $("#slider").bind("valuesChanged", function(e, data){
+        date_range1 = $.datepicker.formatDate('yy-mm-dd', data.values.min);
+        date_range1 = date_range1.concat("T00:00:00Z");
+        date_range2 = $.datepicker.formatDate('yy-mm-dd', data.values.max);
+        date_range2 = date_range2.concat("T00:00:00Z");
+        change_query();
+    });
+
+    function change_query() {
+        query = "http://www.kbresearch.nl/xportal?";
+        query = query.concat(first_part);
+        query = query.concat(last_part);
+
+        if (text.length != 0) {
+            query = query.concat(' and "');
+            query = query.concat(text);
+            query = query.concat('"');
+        }
+
+        query = query.concat(face);
+
+        query = query.concat(' and date within "');
+        query = query.concat(date_range1);
+        query = query.concat(' ');
+        query = query.concat(date_range2);
+        query = query.concat('"');
+
+
+        $("#query").val(query);
+
+    };
+
+    function exec() {
+        window.open(query);
+    }
+
+    change_query();
+
+    </script>
+
+    <input type="submit" value="go" onclick="exec();">
+
+    <p>
+      <a href="https://validator.w3.org/check?uri=referer"><img
+          src="http://www.w3.org/Icons/valid-xhtml10"
+          alt="Valid XHTML 1.0!" height="31" width="88" style="float: right; margin-right: 50%;" /></a>
+    </p>
+
+</body>
+
+</html>
