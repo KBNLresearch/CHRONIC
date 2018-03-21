@@ -4,7 +4,7 @@ More info:
 
 http://lab.kb.nl/dataset/chronic
 
-This repository consists of three directory's containing:
+This repository consists of four directory's containing:
 
 - CHRONReader
 
