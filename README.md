@@ -4,7 +4,7 @@ More info:
 
 http://lab.kb.nl/dataset/chronic
 
-This repository consists of four directory's containing:
+This repository consists of five directory's containing:
 
 - CHRONReader
 
@@ -21,3 +21,7 @@ Software by Leonardo Impett using CNN + pipeline.
 - notebook
 
 IPython Notebook to process .csv files.
+
+- eval
+
+Evaluation forms .xsl for measuring F1-score
